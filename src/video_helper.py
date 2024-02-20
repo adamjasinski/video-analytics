@@ -1,10 +1,24 @@
+from typing import Union
 import av
 import cv2
 import numpy as np
 import io
 
-def get_video_properties(byte_array: bytes):
-    """Return properties of a vide."""
+def get_video_properties(source:Union[bytes|str]):
+    """
+    Return properties of a video.
+
+    Parameters:
+        source: Union[bytes|str]: file name or byte array
+    Returns:
+        A dictionary of video properties
+    """
+    if source is not None and isinstance(source, bytes):
+        byte_array = source
+    elif isinstance(source, str):
+        with io.open(source, 'rb') as f:
+            byte_array = f.read()
+
     # Create a in-memory bytes buffer
     buffer = av.open(io.BytesIO(byte_array))
 
@@ -19,10 +33,11 @@ def get_video_properties(byte_array: bytes):
     height = codec_context.height
 #    channels = codec_context.channels
     codec_name = codec_context.name
+    frames = video_stream.frames
     duration_in_seconds = 60 * video_stream.duration / av.time_base
-    print(f'Width: {width}, Height: {height}, Codec: {codec_name}. Duration: {duration_in_seconds}')
+    print(f'Width: {width}, Height: {height}, Codec: {codec_name}, Frames: {frames}, Duration: {duration_in_seconds}')
 
-    return dict(height=height, width=width, codec=codec_name, duration=duration_in_seconds)
+    return dict(height=height, width=width, codec=codec_name, duration=duration_in_seconds, frames=frames)
 
 
 def convert_to_bw(byte_array: bytes) -> bytes:
