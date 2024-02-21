@@ -8,6 +8,7 @@ import tempfile
 import ultralytics
 import torch
 from yolo_helper import make_callback_adapter_with_counter, convert_tracking_results_to_pandas
+from video_helper import encode_x264, convert_to_bw, encode_bis
 
 class VideoHandler():
 
@@ -69,8 +70,11 @@ class VideoHandler():
             #processed_video_path = os.path.join(tmpdir, "runs/detect/track", self.temp_id + ".avi")
             processed_video_path = os.path.join("runs/detect/track", self.temp_id + ".avi")
             converted_video_path = os.path.join("runs/detect/track", self.temp_id + ".mp4")
-            os.system(f"ffmpeg -y -i {processed_video_path} -vcodec libx264 {converted_video_path}")
-        return results_df, converted_video_path
+            #os.system(f"ffmpeg -y -i {processed_video_path} -vcodec libx264 {converted_video_path}")
+            with open(processed_video_path, 'rb') as vo:
+                video_output = vo.read()
+            converted_bytes = encode_bis(video_output)
+        return results_df, converted_bytes
     
     def __del__(self):
         """
