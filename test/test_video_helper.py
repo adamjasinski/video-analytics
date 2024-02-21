@@ -4,15 +4,16 @@ import math
 import src.video_helper as vh
 
 @pytest.mark.parametrize(
-    "filename,expected_w,expected_h,expected_codec,expected_duration_secs",
-    [pytest.param("./test/data/cars-downsampled.mp4", 320, 240, 'h264', 9)])
-def test_video_properties(filename, expected_w, expected_h, expected_codec, expected_duration_secs):
+    "filename,expected_w,expected_h,expected_codec,expected_frames,expected_duration_secs",
+    [pytest.param("./test/data/cars-downsampled.mp4", 320, 240, 'h264', 301, 9)])
+def test_video_properties(filename, expected_w, expected_h, expected_codec, expected_frames, expected_duration_secs):
      with io.open(filename, 'rb') as f:
         byte_array = f.read()
         props = vh.get_video_properties(byte_array)
         assert props["width"] == expected_w
         assert props["height"] == expected_h
         assert props["codec"] == expected_codec
+        assert props["frames"] == expected_frames
         assert math.floor(props["duration"]) == expected_duration_secs
 
 

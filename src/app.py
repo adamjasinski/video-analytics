@@ -2,9 +2,6 @@ import streamlit as st
 #import av
 import cv2
 import numpy as np
-import pandas as pd
-import plotly.express as px
-
 
 from video_handler import VideoHandler
 
@@ -35,23 +32,10 @@ def main():
         col3.metric(label="Height", value=f"{height} px", delta=None)
         col4.metric(label="Frames", value=f"{total_frames}", delta=None)
 
-        st.subheader("Track number of objects over time")
-        
-        data = pd.read_csv("../data/yolo_output.csv")
+        def update_progressbar(frame_counter):
+            track_bar.progress(frame_counter/total_frames)
 
-        group_data = data[["frame_no","class_name"]].groupby(["frame_no","class_name"]).size().reset_index(name="count")
-        final_df = group_data.pivot(index="frame_no" , columns="class_name", values="count").fillna(0)
-
-        fig = px.line(final_df, 
-              x=final_df.index, 
-              y=data.class_name.unique(), 
-              title='Class counts for each frame')
-
-        fig.update_xaxes(title_text='frame number')
-        fig.update_yaxes(title_text='counts')
-
-        st.plotly_chart(fig, use_container_width=True)
-
+        tracking_results = my_video.track(progressbar_callback=update_progressbar)
         del my_video
 
 
