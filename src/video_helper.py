@@ -4,7 +4,24 @@ import cv2
 import numpy as np
 import io
 
-def get_video_properties(byte_array: bytes):
+def get_video_properties(source:Union[bytes|str]):
+    """
+    Return properties of a video.
+
+    Parameters:
+        source: Union[bytes|str]: file name or byte array
+    Returns:
+        A dictionary of video properties
+    """
+    if source is not None and isinstance(source, bytes):
+        byte_array = source
+    elif isinstance(source, str):
+        with io.open(source, 'rb') as f:
+            byte_array = f.read()
+
+     # Create a in-memory bytes buffer
+    buffer = av.open(io.BytesIO(byte_array))
+
     """Return properties of a vide."""
     # Create a in-memory bytes buffer
     buffer = av.open(io.BytesIO(byte_array))
