@@ -5,14 +5,15 @@ import cv2
 import uuid
 import pandas as pd
 import ultralytics
-from yolo_helper import make_callback_adapter_with_counter
+from yolo_helper import make_callback_adapter_with_counter, convert_tracking_results_to_pandas
 
 class VideoHandler():
 
     def __init__(self, video: bytes):
         """ Constructor """
         self.byte_video = io.BytesIO(video.read())
-        self.video_path = str(uuid.uuid4()) + ".mp4"
+        self.temp_id = str(uuid.uuid4())
+        self.video_path = self.temp_id + ".mp4"
 
         #write file to given video_path
         with open(self.video_path, 'wb') as out:
@@ -20,6 +21,8 @@ class VideoHandler():
         
     def get_video_path(self):
         return self.video_path
+    
+    # def get_tracked_video_file(self)
 
     def get_video_stats(self) -> tuple:
         """
@@ -52,11 +55,10 @@ class VideoHandler():
         progress_callback_wrapped = make_callback_adapter_with_counter(yolo_progress_reporting_event, 
                                                                        lambda _,counter: progressbar_callback(counter))
         model.add_callback(yolo_progress_reporting_event, progress_callback_wrapped)
-        # TODO - change to stream=True once consume tthe tracking results
-        tracking_results = model.track(source=self.video_path, conf=0.2, iou=0.6, show=False, device=0, stream=False)
+        tracking_results = model.track(source=self.video_path, conf=0.2, iou=0.6, show=False, device=0, stream=True, save=True, save_dir="./")
         assert tracking_results is not None
-       
-        return None
+        results_df = convert_tracking_results_to_pandas(tracking_results)
+        return results_df
 
     
     def __del__(self):

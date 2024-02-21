@@ -36,6 +36,7 @@ def main():
             track_bar.progress(frame_counter/total_frames)
 
         tracking_results = my_video.track(progressbar_callback=update_progressbar)
+        st.write(tracking_results)
         del my_video
 
 
