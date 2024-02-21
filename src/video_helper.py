@@ -8,8 +8,8 @@ def get_video_properties(source:Union[bytes|str]):
     """
     Return properties of a video.
 
-    Parameters:
-        source: Union[bytes|str]: file name or byte array
+    Args:
+        source: (bytes|str): file name or byte array
     Returns:
         A dictionary of video properties
     """

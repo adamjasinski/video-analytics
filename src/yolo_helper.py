@@ -5,7 +5,7 @@ from video_helper import get_video_properties
 
 frames = 0
 
-def create_callback_adapter_with_counter(event_name, callback):
+def make_callback_adapter_with_counter(event_name, callback):
     """
     Convert the callback function with 2 params to a callback format required by YOLO.
     Args:
@@ -43,7 +43,7 @@ if __name__ == '__main__':
         "on_predict_batch_end"]
     for evt in events_to_register:
         #add_callback_for(model, evt)
-        callback_with_counter = create_callback_adapter_with_counter(evt, 
+        callback_with_counter = make_callback_adapter_with_counter(evt, 
                                                                 lambda evt, counter: 
                                                                     print(f"Callback for event {evt} called; counter:{counter}"))
         model.add_callback(evt, callback_with_counter)

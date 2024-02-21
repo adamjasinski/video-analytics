@@ -4,7 +4,8 @@ from typing import Callable
 import cv2
 import uuid
 import pandas as pd
-
+import ultralytics
+from yolo_helper import make_callback_adapter_with_counter
 
 class VideoHandler():
 
@@ -38,10 +39,24 @@ class VideoHandler():
         return (fps, width, height, total_frames)
     
     def track(self,progressbar_callback: Callable) -> pd.DataFrame:
-        """ """
-        progressbar_callback(50)
+        """
+        Perform object tracking on the video with YOLOv8.
+        Args:
+            progressbar_callback (Callable[int]): a callback accepting 1 argument (frame number)
+        Return:
+            DataFrame with tracking results.
+        """
+        pretrained_model = "yolov8n.pt"
+        model = ultralytics.YOLO(pretrained_model, verbose=True)
+        yolo_progress_reporting_event = "on_predict_batch_start"
+        progress_callback_wrapped = make_callback_adapter_with_counter(yolo_progress_reporting_event, 
+                                                                       lambda _,counter: progressbar_callback(counter))
+        model.add_callback(yolo_progress_reporting_event, progress_callback_wrapped)
+        # TODO - change to stream=True once consume tthe tracking results
+        tracking_results = model.track(source=self.video_path, conf=0.2, iou=0.6, show=False, device=0, stream=False)
+        assert tracking_results is not None
+       
         return None
-
 
     
     def __del__(self):
