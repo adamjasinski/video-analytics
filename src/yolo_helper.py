@@ -2,6 +2,8 @@ import ultralytics
 import os
 import torch
 from video_helper import get_video_properties
+import pandas as pd
+import numpy as np
 
 frames = 0
 
@@ -22,6 +24,48 @@ def make_callback_adapter_with_counter(event_name, callback):
         callback(event_name, event_counter)
 
     return yolo_callback
+
+def convert_tracking_result_to_pandas(frame_no, boxes_result:ultralytics.engine.results.Boxes):
+    box = boxes_result.boxes # sic!
+    int_vectorized = np.vectorize(np.int_)
+    if box is not None:
+        class_ids = int_vectorized(box.cls.cpu().numpy())
+        observation_count = len(class_ids)
+        class_id_to_name = lambda id: boxes_result.names[int(id)]
+        class_names = list(map(class_id_to_name, class_ids))
+        ids = int_vectorized(box.id.cpu()) if box.id is not None else np.zeros(shape=observation_count, dtype='int')
+        xywh = box.xywh.cpu()
+        xs = xywh[:, 0]
+        ys = xywh[:, 1]
+        ws = xywh[:, 2]
+        hs = xywh[:, 3]
+        frame_nos = np.repeat(a=frame_no, repeats=observation_count)
+        data = dict(frame_no=frame_nos, class_id=class_ids, class_name=class_names, id=ids, x=xs, y=ys, w=ws, h=hs)
+        df = pd.DataFrame(data=data)
+        return df
+    else:
+        return pd.DataFrame(columns=['frame_no','class_id', 'class_name', 'id', 'x', 'y', 'w', 'h'])
+    #    data_frames_per_frame.append(df)
+
+def convert_tracking_results_to_pandas(tracking_results):
+    dfs = [] # Will contain 1 data frame per video frame
+    for i, tr in enumerate(tracking_results):
+        df = convert_tracking_result_to_pandas(i, tr)
+        dfs.append(df)
+
+    return pd.concat(dfs)
+    # counter = 0
+    # data_frames_per_frame = []
+    # for box in boxes:
+    #     class_ids = box.cls.numpy()
+    #     ids = box.id.numpy()
+    #     data = dict(class_id=class_ids, id=ids)
+    #     df = pd.DataFrame(data=data)
+    #     data_frames_per_frame.append(df)
+    #     counter += 1
+    #     if counter >= 20:
+    #         break
+    # return pd.concat(data_frames_per_frame, axis=0)
 
 if __name__ == '__main__':
     # setting device on GPU if available, else CPU
@@ -55,8 +99,8 @@ if __name__ == '__main__':
     #benchmark_results = model.benchmark()
     #print(benchmark_results)
 
-    #source_video = "./test/data/cars-downsampled.mp4"
-    source_video = "/home/adam/Projects/DSR/final_project/data/cutted/machine_vs_condors/machine_vs_condors_pool_001.mp4"
+    source_video = "./test/data/cars-downsampled.mp4"
+    #source_video = "/home/adam/Projects/DSR/final_project/data/cutted/machine_vs_condors/machine_vs_condors_pool_001.mp4"
 
     props = get_video_properties(source=source_video)
     frames = props["frames"]
@@ -65,15 +109,26 @@ if __name__ == '__main__':
     assert results is not None
     print(f"Results type: {type(results)}")
 
-    counter = 0
-    for res in results:
-        #print(res.names) - all classes explained
-        print(res)
-        print("Box")
-        print(res.boxes[0])
-        counter += 1
-        if counter >= 20:
-            break
+    combined_df = convert_tracking_results_to_pandas(results)
+    # counter = 0
+    # dfs = []
+    # for res in results:
+    #     #print(res.names) - all classes explained
+    #     print(res)
+    #     print("Box")
+    #     #print(res.boxes[0])
+    #     df = convert_tracking_result_to_pandas(res)
+    #     #print(df)
+    #     dfs.append(df)
+    #     counter += 1
+    #     # if counter >= 20:
+    #     #     break
+    
+    # combined_df = pd.concat(dfs)
+    print(combined_df.head(30))
+    print(f"Total length: {len(combined_df)}")
+    #print(combined_df[combined_df[id > 1.0]].head(30))
+
     # print(f"Result type: {type(results[0])}")
     # print(results[0])
     # print("Boxes")
