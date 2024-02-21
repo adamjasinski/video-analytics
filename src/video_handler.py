@@ -4,7 +4,9 @@ from typing import Callable
 import cv2
 import uuid
 import pandas as pd
+import tempfile
 import ultralytics
+import torch
 from yolo_helper import make_callback_adapter_with_counter, convert_tracking_results_to_pandas
 
 class VideoHandler():
@@ -41,13 +43,14 @@ class VideoHandler():
 
         return (fps, width, height, total_frames)
     
-    def track(self,progressbar_callback: Callable) -> pd.DataFrame:
+    def track(self,progressbar_callback: Callable) -> tuple[pd.DataFrame, str]:
         """
         Perform object tracking on the video with YOLOv8.
         Args:
             progressbar_callback (Callable[int]): a callback accepting 1 argument (frame number)
         Return:
-            DataFrame with tracking results.
+            DataFrame with tracking results
+            Processed video path
         """
         pretrained_model = "yolov8n.pt"
         model = ultralytics.YOLO(pretrained_model, verbose=True)
@@ -55,11 +58,19 @@ class VideoHandler():
         progress_callback_wrapped = make_callback_adapter_with_counter(yolo_progress_reporting_event, 
                                                                        lambda _,counter: progressbar_callback(counter))
         model.add_callback(yolo_progress_reporting_event, progress_callback_wrapped)
-        tracking_results = model.track(source=self.video_path, conf=0.2, iou=0.6, show=False, device=0, stream=True, save=True, save_dir="./")
-        assert tracking_results is not None
-        results_df = convert_tracking_results_to_pandas(tracking_results)
-        return results_df
 
+        device = 0 if torch.cuda.is_available() else 'cpu' 
+        video_output = None
+        with tempfile.TemporaryDirectory() as tmpdir:
+            print(f"Using tmpdir: {tmpdir}")
+            tracking_results = model.track(source=self.video_path, conf=0.2, iou=0.6, show=False, device=device, stream=True, save=True, save_dir=tmpdir)
+            results_df = convert_tracking_results_to_pandas(tracking_results)
+            # NB - workaround for the bug in Ultralytics that ignores the path passed to save_dir
+            #processed_video_path = os.path.join(tmpdir, "runs/detect/track", self.temp_id + ".avi")
+            processed_video_path = os.path.join("runs/detect/track", self.temp_id + ".avi")
+            converted_video_path = os.path.join("runs/detect/track", self.temp_id + ".mp4")
+            os.system(f"ffmpeg -y -i {processed_video_path} -vcodec libx264 {converted_video_path}")
+        return results_df, converted_video_path
     
     def __del__(self):
         """

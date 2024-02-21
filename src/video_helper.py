@@ -22,7 +22,7 @@ def get_video_properties(source:Union[bytes|str]):
      # Create a in-memory bytes buffer
     buffer = av.open(io.BytesIO(byte_array))
 
-    """Return properties of a vide."""
+    """Return properties of a video."""
     # Create a in-memory bytes buffer
     buffer = av.open(io.BytesIO(byte_array))
 

@@ -35,10 +35,10 @@ def main():
         def update_progressbar(frame_counter):
             track_bar.progress(frame_counter/total_frames)
 
-        tracking_results = my_video.track(progressbar_callback=update_progressbar)
+        tracking_results, video_output = my_video.track(progressbar_callback=update_progressbar)
         st.write(tracking_results)
+        st.video(data=video_output)
         del my_video
-
 
 
 if __name__ == "__main__":
