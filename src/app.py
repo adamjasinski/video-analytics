@@ -2,6 +2,7 @@ import streamlit as st
 #import av
 import cv2
 import numpy as np
+import plotly.express as px
 
 from video_handler import VideoHandler
 
@@ -36,8 +37,23 @@ def main():
             track_bar.progress(frame_counter/total_frames)
 
         tracking_results, video_output = my_video.track(progressbar_callback=update_progressbar)
+        
         st.write(tracking_results)
         st.video(data=video_output)
+
+        group_data = tracking_results[["frame_no","class_name"]].groupby(["frame_no","class_name"]).size().reset_index(name="count")
+        final_df = group_data.pivot(index="frame_no" , columns="class_name", values="count").fillna(0)
+
+        fig = px.line(final_df, 
+              x=final_df.index, 
+              y=tracking_results.class_name.unique(), 
+              title='Class counts for each frame')
+
+        fig.update_xaxes(title_text='frame number')
+        fig.update_yaxes(title_text='counts')
+
+        st.plotly_chart(fig, use_container_width=True)
+
         del my_video
 
 
