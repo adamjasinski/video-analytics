@@ -9,7 +9,7 @@ from video_handler import VideoHandler
 
 def main():
     
-    st.title("Video Processing App")
+    st.title("Object tracking with YOLOv8")
 
     with st.sidebar:
         st.title("Configuration")

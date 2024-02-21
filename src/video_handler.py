@@ -69,6 +69,7 @@ class VideoHandler():
             #processed_video_path = os.path.join(tmpdir, "runs/detect/track", self.temp_id + ".avi")
             processed_video_path = os.path.join("runs/detect/track", self.temp_id + ".avi")
             converted_video_path = os.path.join("runs/detect/track", self.temp_id + ".mp4")
+            # TODO - huge security hole! replace with encoding via PyAV library
             os.system(f"ffmpeg -y -i {processed_video_path} -vcodec libx264 {converted_video_path}")
         return results_df, converted_video_path
     
