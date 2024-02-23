@@ -18,11 +18,20 @@ def test_video_properties(filename, expected_w, expected_h, expected_codec, expe
 
 
 @pytest.mark.parametrize(
-    "filename,expected_h,expected_w",
-    [pytest.param("./test/data/cars-downsampled.mp4", 320, 200)])
-def test_video_conversion_returns_black_and_white(filename,expected_h,expected_w):
+    "filename",
+    [pytest.param("./test/data/cars-downsampled.mp4")])
+def test_video_conversion_returns_black_and_white(filename):
     with io.open(filename, 'rb') as f:
         byte_array = f.read()
         converted = vh.convert_to_bw(byte_array)
         assert converted is not None
         #TODO - verify colorspace
+
+@pytest.mark.parametrize(
+    "filename",
+    [pytest.param("./test/data/cars-downsampled.mp4")])
+def test_video_conversion_transcode(filename):
+    with io.open(filename, 'rb') as f:
+        byte_array = f.read()
+        converted = vh.encode_bis(byte_array)
+        assert converted is not None

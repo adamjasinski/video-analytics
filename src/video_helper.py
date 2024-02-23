@@ -91,20 +91,42 @@ def encode_bis(byte_array: bytes) -> bytes:
 
     # Open the codec context
     codec_context = av.CodecContext.create('libx264', 'w')
+    #codec_context.pix_fmt = 'yuv420p'
     codec_context.options = {
-        'crf': 20,
+        #'crf': 20,
         'preset': 'ultrafast'
     }
 
-    # # Decode the packet into a frame
-    # frame = packet.decode_one()
+    # Get the video stream
+    input_video_stream = next(s for s in in_container.streams if s.type == 'video')
+
+    # Get the codec context
+    input_codec_context = input_video_stream.codec_context
+
+    # Copy some input properties
+    codec_context.pix_fmt = input_codec_context.pix_fmt
+    codec_context.height = input_codec_context.height
+    codec_context.width = input_codec_context.width
+
+    # # # Decode the packet into a frame
+    # # frame = packet.decode_one()
+
+    # for packet in in_container.demux():
+    #     # Do something with `packet`, often:
+    #     for frame in packet.decode():
+    #         # Do something with `frame`.
+    #         # Encode the frame using libx264
+    #         for packet in codec_context.encode(frame):
+    #             out_stream.write(packet)
+    #             out_container.mux(packet)
 
     for frame in in_container.decode(video=0):
         # Encode the frame using libx264
         for packet in codec_context.encode(frame):
             out_stream.write(packet)
-            out_container.mux(packet)
+            #out_container.mux(packet)
 
+    out_stream.close()
     # Close the output container
     out_container.close()
 
@@ -145,3 +167,6 @@ def convert_to_bw(byte_array: bytes) -> bytes:
     # Get byte array from output
     bw_byte_array = output.getvalue()
     return bw_byte_array
+
+print("Hello, world")
+encode_bis(np.zeros(10))
