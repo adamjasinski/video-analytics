@@ -1,0 +1,17 @@
+# Specification of CPU-only dependencies.
+# To be compiled with pip-compile from pip-tools
+
+# Special cases = transient dependencies made explicit to prevent clashes
+lapx==0.5.5
+torch==2.2.0+cpu
+torchvision==0.17.0+cpu
+
+# Direct dependencies of the app
+pandas==2.2.0
+numpy==1.26.4
+#opencv-contrib-python-headless==4.9.0.80
+opencv-python-headless==4.9.0.80
+av==11.0.0
+streamlit==1.31.1
+ultralytics>=8.1.14 # NB
+plotly==5.19.0
