@@ -1,8 +1,8 @@
 FROM ultralytics/ultralytics:8.1.14-cpu
 
 RUN apt update && \
-        # TODO - remove ffmpeg CLI dependency once the transcoding issue in src/video_handler is fixed
-        apt install -y ffmpeg
+        # NB - needed by OpenCV
+        apt install -y libgl1
 
 COPY src /app/src
 COPY pyproject.toml /app
