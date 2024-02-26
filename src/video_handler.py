@@ -61,20 +61,22 @@ class VideoHandler():
         model.add_callback(yolo_progress_reporting_event, progress_callback_wrapped)
 
         device = 0 if torch.cuda.is_available() else 'cpu' 
-        video_output = None
-        with tempfile.TemporaryDirectory() as tmpdir:
-            print(f"Using tmpdir: {tmpdir}")
-            tracking_results = model.track(source=self.video_path, conf=0.2, iou=0.6, show=False, device=device, stream=True, save=True, save_dir=tmpdir)
-            results_df = convert_tracking_results_to_pandas(tracking_results)
-            # NB - workaround for the bug in Ultralytics that ignores the path passed to save_dir
-            #processed_video_path = os.path.join(tmpdir, "runs/detect/track", self.temp_id + ".avi")
-            processed_video_path = os.path.join("runs/detect/track", self.temp_id + ".avi")
-            converted_video_path = os.path.join("runs/detect/track", self.temp_id + ".mp4")
-            #os.system(f"ffmpeg -y -i {processed_video_path} -vcodec libx264 {converted_video_path}")
-            with open(processed_video_path, 'rb') as vo:
-                video_output = vo.read()
+        outputdir=os.getcwd()
+        print(f"Using outputdir: {outputdir}")
+        tracking_results = model.track(source=self.video_path, conf=0.2, iou=0.6, show=False, device=device, stream=True, save=True, save_dir=outputdir, exist_ok=True, project=outputdir)
+        results_df = convert_tracking_results_to_pandas(tracking_results)
+        # NB - workaround for the bug in Ultralytics that ignores the path passed to save_dir
+        #processed_video_path = os.path.join(tmpdir, "runs/detect/track", self.temp_id + ".avi")
+        processed_video_path = os.path.join(outputdir, "track", self.temp_id + ".avi")
+        converted_video_path = os.path.join(outputdir, "track", self.temp_id + ".mp4")
+        # TODO - huge security hole! replace with encoding via PyAV library
+        print(f"Converting the output ({processed_video_path}) to the format readable by streamlit")
+        os.system(f"ffmpeg -y -i {processed_video_path} -vcodec libx264 {converted_video_path}")
+        print(f"Conversion complete")
+        with open(processed_video_path, 'rb') as vo:
+            video_output = vo.read()
             converted_bytes = encode_bis(video_output)
-        return results_df, converted_bytes
+        return results_df, converted_video_path
     
     def __del__(self):
         """

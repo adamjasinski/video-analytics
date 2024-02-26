@@ -1,0 +1,12 @@
+[project]
+requires-python = ">=3.11"
+name = "video-analytics"
+description = "Video Analytics - Object Tracking with YOLOv8"
+version = "0.1"
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements-cpu.in"] }
+
+[project.optional-dependencies]
+dev = ["pytest"]
