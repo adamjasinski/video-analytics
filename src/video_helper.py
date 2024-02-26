@@ -38,7 +38,7 @@ def get_video_properties(source:Union[bytes|str]):
 #    channels = codec_context.channels
     codec_name = codec_context.name
     frames = video_stream.frames
-    duration_in_seconds = 60 * video_stream.duration / av.time_base
+    duration_in_seconds = frames / (video_stream.average_rate)
     print(f'Width: {width}, Height: {height}, Codec: {codec_name}, Frames: {frames}, Duration: {duration_in_seconds}')
 
     return dict(height=height, width=width, codec=codec_name, duration=duration_in_seconds, frames=frames)
@@ -75,7 +75,11 @@ def encode_x264(byte_array):
 
     return byte_array
 
-def encode_bis(byte_array: bytes) -> bytes:
+def transcode_to_h264(byte_array: bytes) -> bytes:
+    """
+    Transcode the video to x264.
+    Note: audio is skipped.
+    """
     # Convert byte array to numpy array
     np_array = np.frombuffer(byte_array, np.uint8)
 
@@ -123,8 +127,8 @@ def encode_bis(byte_array: bytes) -> bytes:
     for frame in in_container.decode(video=0):
         # Encode the frame using libx264
         for packet in codec_context.encode(frame):
-            out_stream.write(packet)
-            #out_container.mux(packet)
+            #out_stream.write(packet)
+            out_container.mux(packet)
 
     out_stream.close()
     # Close the output container
@@ -167,6 +171,3 @@ def convert_to_bw(byte_array: bytes) -> bytes:
     # Get byte array from output
     bw_byte_array = output.getvalue()
     return bw_byte_array
-
-print("Hello, world")
-encode_bis(np.zeros(10))

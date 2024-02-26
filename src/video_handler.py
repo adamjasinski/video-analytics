@@ -8,7 +8,7 @@ import tempfile
 import ultralytics
 import torch
 from yolo_helper import make_callback_adapter_with_counter, convert_tracking_results_to_pandas
-from video_helper import encode_x264, convert_to_bw, encode_bis
+from video_helper import encode_x264, convert_to_bw, transcode_to_h264
 
 class VideoHandler():
 
@@ -71,11 +71,14 @@ class VideoHandler():
         converted_video_path = os.path.join(outputdir, "track", self.temp_id + ".mp4")
         # TODO - huge security hole! replace with encoding via PyAV library
         print(f"Converting the output ({processed_video_path}) to the format readable by streamlit")
-        os.system(f"ffmpeg -y -i {processed_video_path} -vcodec libx264 {converted_video_path}")
+        #os.system(f"ffmpeg -y -i {processed_video_path} -vcodec libx264 {converted_video_path}")
+        with open(processed_video_path, 'rb') as vi:
+            video_output = vi.read()
+            converted_bytes = transcode_to_h264(video_output)
+        assert converted_bytes is not None
+        with open(converted_video_path, 'wb') as vo:
+            vo.write(converted_bytes)
         print(f"Conversion complete")
-        with open(processed_video_path, 'rb') as vo:
-            video_output = vo.read()
-            converted_bytes = encode_bis(video_output)
         return results_df, converted_video_path
     
     def __del__(self):
