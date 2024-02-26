@@ -5,10 +5,12 @@ RUN apt update && \
         apt install -y ffmpeg
 
 COPY src /app/src
-COPY requirements-cpu.txt /app
+COPY pyproject.toml /app
+COPY requirements* /app
 
 WORKDIR /app
+#RUN pip install -r requirements-cpu.in
 RUN pip install -r requirements-cpu.txt
 
 EXPOSE 8502:8502
-CMD streamlit --server.port 8502 src/app.py
+CMD streamlit run --server.port 8502 src/app.py

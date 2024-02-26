@@ -13,5 +13,5 @@ numpy==1.26.4
 opencv-python-headless==4.9.0.80
 av==11.0.0
 streamlit==1.31.1
-ultralytics>=8.1.14 # NB
+ultralytics>=8.1.14        # NB - already provided by the Docker iamge
 plotly==5.19.0
