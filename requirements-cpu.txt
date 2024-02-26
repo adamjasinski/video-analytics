@@ -68,6 +68,6 @@ tzlocal==5.2
 ultralytics==8.1.18
 urllib3==2.2.1
 validators==0.22.0
--e git+https://github.com/adamjasinski/video-analytics.git@a9f88123d6f92db34732de3b9dc7b6b133743c3b#egg=video_analytics
+#-e git+https://github.com/adamjasinski/video-analytics.git@a9f88123d6f92db34732de3b9dc7b6b133743c3b#egg=video_analytics
 watchdog==4.0.0
 zipp==3.17.0
