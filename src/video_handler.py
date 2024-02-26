@@ -4,11 +4,10 @@ from typing import Callable
 import cv2
 import uuid
 import pandas as pd
-import tempfile
 import ultralytics
 import torch
 from yolo_helper import make_callback_adapter_with_counter, convert_tracking_results_to_pandas
-from video_helper import encode_x264, convert_to_bw, transcode_to_h264
+from video_helper import transcode_to_h264
 
 class VideoHandler():
 
@@ -44,14 +43,14 @@ class VideoHandler():
 
         return (fps, width, height, total_frames)
     
-    def track(self,progressbar_callback: Callable) -> tuple[pd.DataFrame, str]:
+    def track(self,progressbar_callback: Callable) -> tuple[pd.DataFrame, bytes]:
         """
         Perform object tracking on the video with YOLOv8.
         Args:
             progressbar_callback (Callable[int]): a callback accepting 1 argument (frame number)
         Return:
             DataFrame with tracking results
-            Processed video path
+            Processed video buffer
         """
         pretrained_model = "yolov8n.pt"
         model = ultralytics.YOLO(pretrained_model, verbose=True)
@@ -65,24 +64,21 @@ class VideoHandler():
         print(f"Using outputdir: {outputdir}")
         tracking_results = model.track(source=self.video_path, conf=0.2, iou=0.6, show=False, device=device, stream=True, save=True, save_dir=outputdir, exist_ok=True, project=outputdir)
         results_df = convert_tracking_results_to_pandas(tracking_results)
-        # NB - workaround for the bug in Ultralytics that ignores the path passed to save_dir
-        #processed_video_path = os.path.join(tmpdir, "runs/detect/track", self.temp_id + ".avi")
+
+        # NB - YOLO writes the video with tracking markings as uncompressed AVI (MJPG)
         processed_video_path = os.path.join(outputdir, "track", self.temp_id + ".avi")
-        converted_video_path = os.path.join(outputdir, "track", self.temp_id + ".mp4")
-        # TODO - huge security hole! replace with encoding via PyAV library
+
         print(f"Converting the output ({processed_video_path}) to the format readable by streamlit")
-        #os.system(f"ffmpeg -y -i {processed_video_path} -vcodec libx264 {converted_video_path}")
         with open(processed_video_path, 'rb') as vi:
             video_output = vi.read()
             converted_bytes = transcode_to_h264(video_output)
         assert converted_bytes is not None
-        with open(converted_video_path, 'wb') as vo:
-            vo.write(converted_bytes)
         print(f"Conversion complete")
-        return results_df, converted_video_path
+        return results_df, converted_bytes
     
     def __del__(self):
         """
         Remove a video file.
         """
         os.remove(self.video_path)
+        # TODO - delete YOLO video output (AVI) as well
